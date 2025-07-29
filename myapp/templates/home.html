@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD With Ajax</title>
+    <!-- ----font-awesome link------ -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
+    <!-- bootstrap link  -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mt-5 mb-5">CRUD Opearation With Ajax</h1>
+        <hr>
+        <div class="row mt-5">
+            <div class="col-4">
+                <h2>Register Emlpoyee</h2>
+                    {% csrf_token %}
+                    <img id="imagePreview" class="img-thumbnail mt-2" style="width: 100px; height: 100px; display: none;" >
+                  
+                    <label for="" class="form-label">Images</label>
+                    <input type="file" class="form-control" name="images" id="images">
+
+                    <label for="" class="form-label">Name</label>
+                    <input type="text" class="form-control"  name="name" id="name"   placeholder="Example :- Venus">
+
+                    <label for="" class="form-label">Email</label>
+                    <input type="text" class="form-control" name="email" id="email" placeholder="Example :- venus08866@gmail.com">
+
+                    <label for="" class="form-label">Gender</label>
+                    <select name="gender" id="gender" class="form-select">
+                        <option value="" selected disabled>select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <label for="" class="form-label">Department</label>
+                    <select name="department" id="department" class="form-select">
+                        <option selected disabled value="">select</option>
+                        <option value="Python">Python</option>
+                        <option value="React">React</option>
+                        <option value="Node.js">Node.js</option>
+                        <option value="Asp.net">Asp.net</option>
+                    </select>
+
+                    <button class="btn btn-success mt-5" onclick="insert()">Submit</button>
+                    <button class="btn btn-danger mt-5">Cancel</button>
+               
+            </div>
+            <div class="col-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">All Employees</h2>
+            <input type="text" class="form-control w-50" placeholder="Search Employee...">
+        </div>
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Images</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Gender</th>
+                            <th>Department</th>
+                            <th>Update</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                 
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    
+    <script>
+        $(document).ready(function(){
+            alert("Welcome to Crud Operation With Ajax") 
+            display()
+        })
+
+        const display = ()=>{
+            $.get('display',{},(rt)=>{
+
+                let row = ""
+
+                rt.data.map((ele,index)=>{
+                 
+                   row += `
+                          <tr>
+                            <td>${ele.id}</td>
+                            <td>
+                                  <img src="${ele.images}" class="img-thumbnail" style="width: 60px; height: 80px; object-fit: cover;">
+                            </td>
+                            <td>${ele.name}</td>
+                            <td>${ele.email}</td>
+                            <td>${ele.gender}</td>
+                            <td>${ele.department}</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="employeid(${ele.id})">Edit</button>
+                            </td>
+                            <td>  
+                                <button class="btn btn-danger" onclick="deletes(${ele.id})">Remove</button></td>
+                        </tr>
+                   
+                   `
+                  
+                
+                })
+                $('#tbody').html(row)
+            })
+        }
+
+        $('#images').change(function(){
+            const file = this.files[0]
+            if(file){
+                let render = new FileReader()
+
+                render.onload = function(event){
+                    $('#imagePreview').attr('src',event.target.result).show()
+                }
+                render.readAsDataURL(file)
+            }
+        })
+    
+        const insert = () => {
+                    let formData = new FormData();
+                    formData.append("images", $('#images')[0].files[0]);
+                    formData.append("name", $('#name').val());
+                    formData.append("email", $('#email').val());
+                    formData.append("gender", $('#gender').val());
+                    formData.append("department", $('#department').val());
+                    formData.append("csrfmiddlewaretoken", document.getElementsByName('csrfmiddlewaretoken')[0].value);
+
+            $.ajax({
+                url: 'insert',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+            success: function(rt) {
+                alert("Data inserted successfully!");
+                display();
+
+            // Clear input fields after successful insert
+            $('#images').val("");
+            $('#name').val("");
+            $('#email').val("");
+            $('#gender').val("");
+            $('#department').val("");
+        }
+    });
+}
+
+        const deletes = (id) =>{
+            if(confirm("Are you sure  the delete Record !")){
+
+                $.get('deletes',{id},(rt)=>{
+                    alert(rt)
+                    
+                    display()
+                })
+            }
+            else{
+                display()
+            }
+        }
+
+const employeid = (sid) => {
+    $.get('employeid', { sid }, (rt) => {
+        const data = rt.data[0];
+        $('#imagePreview').attr('src', data.images).show();  // Show existing image
+        $('#name').val(data.name);
+        $('#email').val(data.email);
+        $('#gender').val(data.gender);
+        $('#department').val(data.department);
+
+        // If needed, store the ID in a hidden field for update reference
+        $('#id').val(data.id);
+    });
+}
+
+       const updates = () => {
+                    let formData = new FormData();
+                    formData.append("images", $('#images')[0].files[0]);
+                    formData.append("name", $('#name').val());
+                    formData.append("email", $('#email').val());
+                    formData.append("gender", $('#gender').val());
+                    formData.append("department", $('#department').val());
+                    formData.append("csrfmiddlewaretoken", document.getElementsByName('csrfmiddlewaretoken')[0].value);
+
+            $.ajax({
+                url: 'updates',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+            success: function(rt) {
+                alert("Data update successfully!");
+                display();
+
+            // Clear input fields after successful insert
+            $('#images').val("");
+            $('#name').val("");
+            $('#email').val("");
+            $('#gender').val("");
+            $('#department').val("");
+        }
+    });
+}
+
+
+    </script>
+</body>
+</html>
